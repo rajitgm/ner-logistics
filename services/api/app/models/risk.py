@@ -34,6 +34,7 @@ from app.db.base import (
     pg_enum,
 )
 
+
 class RiskScore(UUIDPrimaryKeyMixin, ProvenanceMixin, ConfidenceMixin, Base):
     """A hybrid risk appraisal of one road segment at one point in time.
 

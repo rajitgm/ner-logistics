@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -51,7 +51,7 @@ class Base(DeclarativeBase):
 
     metadata = sa.MetaData(naming_convention=NAMING_CONVENTION)
 
-    type_annotation_map = {
+    type_annotation_map: ClassVar[dict[type, Any]] = {
         dict[str, Any]: JSONB,
         datetime: sa.TIMESTAMP(timezone=True),
     }

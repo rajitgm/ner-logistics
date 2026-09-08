@@ -55,13 +55,13 @@ from app.services import audit
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "bearer_scheme",
-    "get_token_claims",
-    "get_current_user",
-    "require_permission",
-    "require_any_permission",
     "AccessScope",
+    "bearer_scheme",
     "enforce_scope",
+    "get_current_user",
+    "get_token_claims",
+    "require_any_permission",
+    "require_permission",
 ]
 
 #: Sent with every 401 so a compliant client knows to re-authenticate rather than

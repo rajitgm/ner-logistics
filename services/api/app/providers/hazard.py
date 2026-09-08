@@ -29,7 +29,7 @@ from app.core.enums import DataProvenance, HazardType
 from app.providers.base import Provider, UnconfiguredProvider
 from app.providers.models import HazardZoneRecord
 
-__all__ = ["HazardProvider", "SyntheticHazardProvider", "BhuvanHazardProvider"]
+__all__ = ["BhuvanHazardProvider", "HazardProvider", "SyntheticHazardProvider"]
 
 #: Hand-drawn zones: (hazard type, name, min_lat, min_lon, max_lat, max_lon,
 #: severity 0-1, return period years or None). Boxes rather than real polygons

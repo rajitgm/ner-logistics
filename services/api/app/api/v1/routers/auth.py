@@ -401,7 +401,7 @@ async def read_me(user: User = Depends(get_current_user)) -> UserOut:
 )
 async def list_roles(
     session: AsyncSession = Depends(get_db),
-    _: User = Depends(require_permission(Permission.USER_READ)),
+    _: User = Depends(require_permission(Permission.USER_READ)),  # noqa: B008
 ) -> List[RoleOut]:
     """List roles for the user-administration screen.
 

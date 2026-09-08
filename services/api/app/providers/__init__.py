@@ -88,7 +88,7 @@ from app.providers.registry import (
 from app.providers.routing import RoutingProvider, haversine_km
 from app.providers.weather import WeatherProvider
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - grouped by provider lifecycle for discoverability
     # base
     "Provider",
     "ProviderError",

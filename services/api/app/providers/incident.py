@@ -28,7 +28,7 @@ from app.core.enums import DataProvenance
 from app.providers.base import Provider, ProviderStatus, UnconfiguredProvider
 from app.providers.models import IncidentRecord
 
-__all__ = ["IncidentProvider", "InternalIncidentProvider", "ExternalFeedIncidentProvider"]
+__all__ = ["ExternalFeedIncidentProvider", "IncidentProvider", "InternalIncidentProvider"]
 
 
 class IncidentProvider(Provider):

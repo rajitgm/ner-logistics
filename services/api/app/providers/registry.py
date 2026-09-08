@@ -78,21 +78,21 @@ from app.providers.weather import (
 )
 
 __all__ = [
-    "PROVIDER_KINDS",
     "KNOWN_IMPLEMENTATIONS",
-    "get_weather_provider",
-    "get_osm_provider",
+    "PROVIDER_KINDS",
+    "all_providers",
+    "close_providers",
     "get_hazard_provider",
     "get_incident_provider",
-    "get_routing_provider",
     "get_llm_provider",
     "get_notification_provider",
-    "all_providers",
-    "provider_report",
+    "get_osm_provider",
+    "get_routing_provider",
+    "get_weather_provider",
     "provider_health",
-    "unconnected_integrations",
+    "provider_report",
     "reset_providers",
-    "close_providers",
+    "unconnected_integrations",
 ]
 
 #: Report order. Data sources first, then the engines built on them, then the
@@ -378,7 +378,7 @@ async def provider_health() -> List[Dict[str, Any]]:
         *(provider.healthcheck() for provider in providers), return_exceptions=True
     )
     out: List[Dict[str, Any]] = []
-    for provider, result in zip(providers, results):
+    for provider, result in zip(providers, results, strict=False):
         if isinstance(result, ProviderStatus):
             out.append(result.as_dict())
         else:
@@ -463,6 +463,6 @@ async def close_providers() -> None:
     for provider in tuple(_LIVE):
         try:
             await provider.aclose()
-        except Exception:  # shutdown must not fail on a dead connection
+        except Exception:  # noqa: BLE001 - shutdown must not fail on a dead connection
             pass
     reset_providers()

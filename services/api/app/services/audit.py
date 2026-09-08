@@ -37,7 +37,7 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["record", "record_and_commit", "client_ip", "request_id_of"]
+__all__ = ["client_ip", "record", "record_and_commit", "request_id_of"]
 
 #: Column widths from ``app.models.system.AuditLog``. Truncating here keeps a long
 #: user agent or a long path from failing the insert and losing the entry.

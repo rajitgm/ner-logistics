@@ -30,12 +30,12 @@ from app.providers.base import Provider, ProviderStatus, UnconfiguredProvider
 from app.providers.models import NotificationRequest, NotificationResult
 
 __all__ = [
-    "NotificationProvider",
-    "LoggingNotificationProvider",
     "CompositeNotificationProvider",
-    "SmsNotificationProvider",
     "EmailNotificationProvider",
+    "LoggingNotificationProvider",
+    "NotificationProvider",
     "PushNotificationProvider",
+    "SmsNotificationProvider",
     "default_channels",
 ]
 

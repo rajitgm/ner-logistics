@@ -37,12 +37,12 @@ from typing import Any, ClassVar, Dict, Optional
 from app.core.enums import DataProvenance
 
 __all__ = [
+    "Provider",
     "ProviderError",
     "ProviderNotConfigured",
-    "ProviderUnavailable",
     "ProviderResponseError",
     "ProviderStatus",
-    "Provider",
+    "ProviderUnavailable",
     "UnconfiguredProvider",
 ]
 
@@ -99,7 +99,7 @@ class ProviderStatus:
         }
 
 
-class Provider(abc.ABC):
+class Provider(abc.ABC):  # noqa: B024 - default health and close hooks are concrete
     """Common behaviour: identity, provenance, and a self-report.
 
     Subclasses set the three class variables and inherit a consistent
@@ -140,7 +140,7 @@ class Provider(abc.ABC):
 
         return self.describe(healthy=True)
 
-    async def aclose(self) -> None:
+    async def aclose(self) -> None:  # noqa: B027 - concrete no-op lifecycle hook
         """Release anything held. No-op unless an adapter owns a connection."""
 
 

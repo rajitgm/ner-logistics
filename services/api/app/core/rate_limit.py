@@ -31,7 +31,7 @@ from app.core.redis import get_redis
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["Verdict", "FixedWindowLimiter"]
+__all__ = ["FixedWindowLimiter", "Verdict"]
 
 #: Beyond this many distinct local keys the fallback map is cleared wholesale.
 #: Bounded memory matters more than perfect accounting in a degraded mode.

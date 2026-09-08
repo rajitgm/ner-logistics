@@ -35,12 +35,12 @@ from app.core.security import MAX_PASSWORD_BYTES, MIN_PASSWORD_LENGTH
 
 __all__ = [
     "LoginRequest",
-    "TokenPair",
-    "RefreshRequest",
-    "PasswordChangeRequest",
-    "RoleOut",
-    "UserOut",
     "MessageOut",
+    "PasswordChangeRequest",
+    "RefreshRequest",
+    "RoleOut",
+    "TokenPair",
+    "UserOut",
 ]
 
 

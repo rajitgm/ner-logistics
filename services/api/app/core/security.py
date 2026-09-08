@@ -44,17 +44,17 @@ __all__ = [
     "TOKEN_TYPE_ACCESS",
     "TOKEN_TYPE_REFRESH",
     "PasswordPolicyError",
+    "TokenClaims",
     "TokenError",
     "TokenExpiredError",
     "TokenInvalidError",
-    "TokenClaims",
-    "hash_password",
-    "verify_password",
-    "needs_rehash",
-    "generate_password",
     "create_access_token",
     "create_refresh_token",
     "decode_token",
+    "generate_password",
+    "hash_password",
+    "needs_rehash",
+    "verify_password",
 ]
 
 #: bcrypt ignores everything past this many bytes of the password.

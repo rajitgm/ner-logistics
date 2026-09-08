@@ -36,6 +36,7 @@ from app.db.base import (
     pg_enum,
 )
 
+
 class WeatherObservation(UUIDPrimaryKeyMixin, TimestampMixin, ProvenanceMixin, Base):
     """A point-in-time weather measurement at a location."""
 

@@ -44,15 +44,15 @@ from app.providers.base import (
 from app.providers.models import RoadFeatureRecord
 
 __all__ = [
-    "OSMProvider",
-    "LocalExtractOSMProvider",
-    "OverpassOSMProvider",
     "ROUTABLE_HIGHWAY_VALUES",
-    "road_type_from_tags",
-    "surface_from_tags",
+    "LocalExtractOSMProvider",
+    "OSMProvider",
+    "OverpassOSMProvider",
+    "parse_lanes",
     "parse_measure",
     "parse_speed_kmph",
-    "parse_lanes",
+    "road_type_from_tags",
+    "surface_from_tags",
 ]
 
 #: ``highway`` values we treat as part of the freight-capable network. Footways,

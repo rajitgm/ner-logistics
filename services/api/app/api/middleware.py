@@ -22,7 +22,7 @@ from app.core.rate_limit import FixedWindowLimiter
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["RequestContextMiddleware", "RateLimitMiddleware"]
+__all__ = ["RateLimitMiddleware", "RequestContextMiddleware"]
 
 #: A supplied correlation id is echoed only if it looks like one. Anything else is
 #: replaced: a header containing a newline would otherwise let a caller write their

@@ -21,7 +21,7 @@ from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["get_redis", "ping_redis", "close_redis"]
+__all__ = ["close_redis", "get_redis", "ping_redis"]
 
 #: Two seconds is far longer than a local INCR needs and far shorter than a user
 #: will wait. A rate limiter is not worth a slow request.

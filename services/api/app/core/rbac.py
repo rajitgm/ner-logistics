@@ -20,19 +20,18 @@ from __future__ import annotations
 from enum import Enum
 from typing import Dict, FrozenSet, Iterable, Mapping
 
-from app.core.enums import Permission as P
-from app.core.enums import UserRole as R
+from app.core.enums import Permission as P, UserRole as R
 
 __all__ = [
-    "ScopeLevel",
+    "MUTATING_PERMISSIONS",
     "ROLE_PERMISSIONS",
     "ROLE_SCOPE",
-    "MUTATING_PERMISSIONS",
+    "ScopeLevel",
+    "describe_role",
     "has_permission",
     "permissions_for",
     "scope_for",
     "widest_scope",
-    "describe_role",
 ]
 
 

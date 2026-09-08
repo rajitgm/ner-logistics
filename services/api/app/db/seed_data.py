@@ -31,15 +31,15 @@ from typing import Any, Dict, Sequence, Tuple
 from app.core.enums import RiskFactor, ShipmentPriorityProfile, UserRole
 
 __all__ = [
-    "ROLE_PROFILES",
     "COMMODITIES",
-    "ROUTING_WEIGHT_PROFILES",
-    "RISK_WEIGHT_SET_VERSION",
-    "RISK_FACTOR_WEIGHTS",
-    "NER_STATES",
     "DISTRICTS",
-    "STATE_SOURCE",
     "DISTRICT_SOURCE",
+    "NER_STATES",
+    "RISK_FACTOR_WEIGHTS",
+    "RISK_WEIGHT_SET_VERSION",
+    "ROLE_PROFILES",
+    "ROUTING_WEIGHT_PROFILES",
+    "STATE_SOURCE",
 ]
 
 #: Cited on every state/district row so the UI can show where a fact came from.

@@ -38,7 +38,7 @@ from app.models.system import (
 from app.models.user import Role, User, user_roles
 from app.models.weather import WeatherAlert, WeatherForecast, WeatherObservation
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - grouped by domain for the public model API
     # base and mixins
     "Base",
     "UUIDPrimaryKeyMixin",

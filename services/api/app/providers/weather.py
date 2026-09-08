@@ -49,10 +49,10 @@ from app.providers.models import (
 )
 
 __all__ = [
-    "WeatherProvider",
-    "SyntheticWeatherProvider",
-    "OpenMeteoWeatherProvider",
     "ImdWeatherProvider",
+    "OpenMeteoWeatherProvider",
+    "SyntheticWeatherProvider",
+    "WeatherProvider",
 ]
 
 

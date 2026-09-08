@@ -38,11 +38,11 @@ from app.providers.base import (
 from app.providers.models import LLMMessage, LLMResponse, LLMToolCall
 
 __all__ = [
+    "DisabledLLMProvider",
     "LLMProvider",
     "OllamaLLMProvider",
-    "StubLLMProvider",
-    "DisabledLLMProvider",
     "OpenAICompatibleLLMProvider",
+    "StubLLMProvider",
 ]
 
 
@@ -221,7 +221,7 @@ class OllamaLLMProvider(LLMProvider):
                 )
             models = response.json().get("models", [])
             tags = {str(m.get("name")) for m in models if isinstance(m, dict)}
-        except Exception as exc:  # a health probe must never raise
+        except Exception as exc:  # noqa: BLE001 - a health probe must never raise
             return self.describe(healthy=False, detail=f"unreachable: {exc}")
         if self._model in tags:
             return self.describe(healthy=True, detail=f"{self._model} available locally")

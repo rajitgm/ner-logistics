@@ -25,7 +25,7 @@ from typing import Any, Dict
 
 from app.core.config import get_settings
 
-__all__ = ["configure_logging", "request_id_ctx", "RequestIdFilter"]
+__all__ = ["RequestIdFilter", "configure_logging", "request_id_ctx"]
 
 #: Set by the request-context middleware; ``-`` outside a request (startup, CLI).
 request_id_ctx: ContextVar[str] = ContextVar("request_id", default="-")

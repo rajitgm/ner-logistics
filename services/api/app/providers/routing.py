@@ -25,6 +25,7 @@ from __future__ import annotations
 import abc
 import math
 from datetime import datetime, timezone
+from itertools import pairwise
 from typing import Any, ClassVar, Dict, List, Sequence
 
 from app.core.enums import DataProvenance
@@ -38,10 +39,10 @@ from app.providers.base import (
 from app.providers.models import RouteLeg, RoutingResult, Waypoint
 
 __all__ = [
-    "RoutingProvider",
-    "OsrmRoutingProvider",
-    "StraightLineRoutingProvider",
     "GraphHopperRoutingProvider",
+    "OsrmRoutingProvider",
+    "RoutingProvider",
+    "StraightLineRoutingProvider",
     "ValhallaRoutingProvider",
     "haversine_km",
 ]
@@ -232,7 +233,7 @@ class OsrmRoutingProvider(RoutingProvider):
             return self.describe(healthy=False, detail=str(exc))
         except ProviderUnavailable as exc:
             return self.describe(healthy=False, detail=str(exc))
-        except Exception as exc:  # a health probe must never raise
+        except Exception as exc:  # noqa: BLE001 - a health probe must never raise
             return self.describe(healthy=False, detail=f"unexpected error: {exc}")
         return self.describe(healthy=True, detail=f"routed a test pair via {self._base_url}")
 
@@ -275,7 +276,7 @@ class StraightLineRoutingProvider(RoutingProvider):
         points = self._validate(waypoints)
         legs: List[RouteLeg] = []
         total_km = 0.0
-        for start, end in zip(points, points[1:]):
+        for start, end in pairwise(points):
             leg_km = haversine_km(start, end) * self.detour_factor
             total_km += leg_km
             legs.append(

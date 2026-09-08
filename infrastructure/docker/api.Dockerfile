@@ -66,6 +66,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 FROM runtime AS dev
 
 USER root
+COPY services/api/requirements.txt /tmp/requirements.txt
 COPY services/api/requirements-dev.txt /tmp/requirements-dev.txt
 # Not --no-index: the dev pins were not wheeled in the builder stage, since a
 # deployment never installs them.

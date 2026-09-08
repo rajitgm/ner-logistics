@@ -1,0 +1,56 @@
+# Kept out of the Docker build context. The API build uses the repository root
+# as its context so the Dockerfile can live in infrastructure/docker/, which
+# makes this file the thing that stops the whole repository being uploaded to
+# the daemon on every build.
+
+# --- large or generated data -------------------------------------------------
+# OSM extracts run to hundreds of megabytes and are mounted at runtime, never
+# baked into an image.
+data/
+ml/models/
+*.osm.pbf
+*.osrm*
+
+# --- dependency trees --------------------------------------------------------
+# Installed inside the image from the lockfile; copying the host's tree would
+# ship the wrong platform's binaries.
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+
+# --- secrets and local state -------------------------------------------------
+# .env must never enter an image: the build cache and every published layer
+# would carry it. Configuration is injected at run time.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- version control and editors ---------------------------------------------
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# --- things that do not belong in an image -----------------------------------
+docs/
+tests/e2e/
+apps/mobile/
+coverage/
+htmlcov/
+.coverage
+*.log

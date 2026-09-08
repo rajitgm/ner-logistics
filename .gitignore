@@ -1,0 +1,74 @@
+# --- secrets -----------------------------------------------------------------
+# Real configuration never enters version control; .env.example is the template
+# and is tracked deliberately.
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+service-account*.json
+
+# --- python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- node / next -------------------------------------------------------------
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- flutter -----------------------------------------------------------------
+apps/mobile/.dart_tool/
+apps/mobile/build/
+apps/mobile/.flutter-plugins*
+*.iml
+
+# --- data --------------------------------------------------------------------
+# Downloaded and generated data stays local: OSM extracts are large, and a
+# generated synthetic dataset is reproducible from its seed, so committing it
+# would be committing an output rather than an input.
+data/osm/*
+data/raw/*
+data/processed/*
+data/synthetic/*
+data/weather/*
+data/hazards/*
+data/incidents/*
+data/uploads/*
+# Keep the directories themselves so the tree matches the documented layout.
+!data/**/.gitkeep
+!data/**/README.md
+*.osm.pbf
+*.osrm*
+
+# --- trained models ----------------------------------------------------------
+# Artefacts are tracked by the model_versions table (path, sha256, metrics), not
+# by git. Committing binaries makes the history unusable.
+ml/models/*
+!ml/models/.gitkeep
+
+# --- editors and OS ----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- local logs and databases ------------------------------------------------
+*.log
+*.sqlite3

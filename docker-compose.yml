@@ -1,0 +1,170 @@
+# NER Logistics — local stack.
+#
+#   make setup && make up     first run (creates .env, builds, migrates, seeds)
+#   docker compose up -d      once .env exists
+#
+# Two services are declared but not started by default, because starting them
+# would fail until their inputs exist:
+#
+#   web      needs apps/web, which Phase 2 creates —  --profile web
+#   osrm     needs an extracted .osm.pbf graph      —  --profile routing
+#
+# Database and cache ports are published on 127.0.0.1 only. The default
+# credentials in .env.example are development conveniences; binding to all
+# interfaces would put them on the local network.
+
+name: ner-logistics
+
+services:
+  postgres:
+    # PostGIS 3.4 on PostgreSQL 16. Plain postgres will not work: the schema
+    # declares Geometry columns and GIST indexes in its first migration.
+    image: postgis/postgis:16-3.4
+    container_name: ner-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ner}
+      POSTGRES_DB: ${POSTGRES_DB:-ner_logistics}
+      # Deterministic collation, so ORDER BY on names does not depend on the
+      # host's locale — the same query should sort identically everywhere.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once, on an empty data directory: creates the extensions so
+      # `alembic upgrade head` does not need superuser rights of its own.
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Without this the API starts before Postgres accepts connections and
+      # dies on its first query.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ner} -d ${POSTGRES_DB:-ner_logistics}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+  redis:
+    image: redis:7.4-alpine
+    container_name: ner-redis
+    restart: unless-stopped
+    # Persistence is on: the offline sync queue and rate-limit counters are
+    # cheap to lose, but a WebSocket fan-out backlog is not worth dropping on a
+    # restart mid-demo.
+    command: >
+      redis-server
+      --appendonly yes
+      --save 60 1000
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      # Context is the repository root so the Dockerfile can live in the
+      # mandated infrastructure/docker/ directory without a path that escapes
+      # its own context. .dockerignore keeps data/ and node_modules out, which
+      # is what would otherwise make a root context slow.
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    container_name: ner-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Service names, not localhost: inside the network the database is
+      # "postgres". These override whatever .env says for a native run.
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      OSRM_BASE_URL: ${OSRM_BASE_URL:-http://osrm:5000}
+      UPLOAD_DIR: /data/uploads
+      OSM_EXTRACT_PATH: /data/osm/northeast-india-latest.osm.pbf
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Source mounted for reload during development. Remove this line and the
+      # --reload flag below for anything resembling a deployment.
+      - ./services/api:/app
+      # Uploaded field-report photos and downloaded OSM extracts live on the
+      # host so a rebuild does not discard them.
+      - ./data:/data
+    extra_hosts:
+      # Lets the container reach Ollama on the host at host.docker.internal.
+      # Docker Desktop provides this name already; on Linux it does not.
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0 --port 8000
+      --reload --reload-dir /app/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  # ---------------------------------------------------------------------------
+  # Declared but off by default. `docker compose up` starts postgres, redis and
+  # api only; these two need inputs that do not exist yet.
+  # ---------------------------------------------------------------------------
+
+  web:
+    # Phase 2 creates apps/web. Until then this build has no context to build,
+    # which is why it sits behind a profile instead of failing every `up`.
+    profiles: ["web"]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.Dockerfile
+    container_name: ner-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+      NEXT_PUBLIC_WS_BASE_URL: ${NEXT_PUBLIC_WS_BASE_URL:-ws://localhost:8000/api/v1/ws}
+      NEXT_PUBLIC_MAP_STYLE_URL: ${NEXT_PUBLIC_MAP_STYLE_URL:-https://demotiles.maplibre.org/style.json}
+      NEXT_PUBLIC_DEFAULT_LOCALE: ${NEXT_PUBLIC_DEFAULT_LOCALE:-en}
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./apps/web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - api
+
+  osrm:
+    # Needs a prepared graph. From the repository root:
+    #   make osm-download        fetches the Northeast India extract (~200 MB)
+    #   make osrm-prepare        runs osrm-extract + osrm-partition + osrm-customize
+    #   docker compose --profile routing up -d osrm
+    # Until then the API's ROUTING_PROVIDER=stub path is what the tests use.
+    profiles: ["routing"]
+    image: ghcr.io/project-osrm/osrm-backend:v5.27.1
+    container_name: ner-osrm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./data/osm:/data
+    # MLD matches the partition/customize preparation steps above; using the
+    # wrong algorithm here fails at startup with an unhelpful message.
+    command: >
+      osrm-routed --algorithm mld
+      --max-table-size 8000
+      /data/northeast-india-latest.osrm
+
+volumes:
+  pgdata:
+  redisdata:
+  web_node_modules:

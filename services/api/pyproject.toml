@@ -1,0 +1,154 @@
+# Tooling configuration for services/api: ruff, mypy, pytest and coverage.
+#
+# There is deliberately no [project] table and no build backend. The API ships as
+# a source tree — infrastructure/docker/api.Dockerfile copies it and installs
+# requirements.txt — never as a wheel. Declaring dependencies here as well would
+# create a second list to keep in step with the first, and the two would diverge
+# the first time someone pinned something in a hurry. requirements.txt and
+# requirements-dev.txt stay the only statement of what is installed.
+#
+# The supported floor is Python 3.10 (app/core/enums.py carries a StrEnum shim
+# for it) while the container runs 3.12. Both matter, so the settings below
+# target the older one; nothing 3.11-only can then creep in unnoticed.
+
+# ------------------------------------------------------------------------ ruff
+
+[tool.ruff]
+# Ruff's default 88 would break the tabular provider datasets into unreadable
+# fragments. 100 fits them and still forces prose to wrap.
+line-length = 100
+target-version = "py310"
+src = ["."]
+extend-exclude = ["__pycache__", ".venv"]
+
+[tool.ruff.lint]
+# Selected so `make lint` fails on defects rather than on taste:
+#   E, W  pycodestyle
+#   F     pyflakes — undefined names, unused imports, shadowed bindings
+#   I     isort — one deterministic import order, enforced instead of remembered
+#   B     bugbear — mutable defaults, assert misuse, loop-variable capture
+#   BLE   blind except; the seven deliberate ones already carry a noqa saying
+#         why breadth is correct at that particular line
+#   C4    comprehension clean-ups
+#   T20   print(); application code logs through app.core.logging
+#   RUF   ruff's own rules, including RUF100 for a noqa that stopped applying
+#
+# pyupgrade (UP) is absent on purpose: UP006/UP007 would rewrite the explicit
+# typing.List / typing.Optional forms the SQLAlchemy models use, which is churn
+# with no behavioural gain on a 3.10 floor. flake8-bandit (S) is deferred to
+# Phase 15, where a security review can triage its findings properly instead of
+# the blanket ignore that adding it today would require.
+select = ["E", "W", "F", "I", "B", "BLE", "C4", "T20", "RUF"]
+ignore = [
+    # Em dashes, arrows and ellipses in prose are deliberate. RUF001-003 exist to
+    # catch a Cyrillic 'а' smuggled into an identifier, not punctuation in a
+    # docstring, and this codebase explains itself in prose.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Hazard extents are a table: one row per feature with its bounding box and
+# confidence inline. Wrapping them would hide the column alignment that makes a
+# wrong coordinate visible at a glance.
+"app/providers/hazard.py" = ["E501"]
+# The initial revision is frozen (see its module docstring) and its long lines are
+# generated DDL literals. Reformatting a migration that has already been applied
+# somewhere is the one edit never worth making to satisfy a linter.
+"alembic/versions/0001_initial_schema.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's entire dependency mechanism is a call in a default argument. B008 is
+# right about mutable defaults in general and wrong about these in particular.
+extend-immutable-calls = [
+    "fastapi.Body",
+    "fastapi.Depends",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Query",
+    "fastapi.Security",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+# Docstrings carry worked examples — the 91 -> CRITICAL risk sum, the seeder's
+# CLI usage. Reformatting code inside them would rewrite prose as if it were
+# source.
+docstring-code-format = false
+
+# ------------------------------------------------------------------------ mypy
+
+[tool.mypy]
+python_version = "3.10"
+files = ["app"]
+namespace_packages = true
+explicit_package_bases = true
+# Every function in app/ is annotated today — checked, not assumed — so these
+# cost nothing to switch on now and stop the first unannotated helper from
+# arriving unnoticed later. SQLAlchemy 2.0 needs no mypy plugin: Mapped[] is
+# ordinary typing.
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
+warn_return_any = true
+strict_equality = true
+show_error_codes = true
+pretty = true
+
+# GeoAlchemy2 ships no type information, and neither do the spatial libraries
+# Phase 2 adds. Silencing those imports by name is honest; a global
+# ignore_missing_imports would also hide a genuine typo in an app import.
+[[tool.mypy.overrides]]
+module = ["geoalchemy2.*", "geopandas.*", "pyproj.*", "shapely.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------- pytest
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+# Tests import `app.*` directly. pytest would find it anyway from this directory,
+# but saying so means `pytest tests/test_rbac.py` behaves like a full run.
+pythonpath = ["."]
+# --strict-markers turns a typo in a marker name into an error rather than a
+# silently unfiltered test; --strict-config does the same for this table.
+addopts = "-q --strict-markers --strict-config"
+# pytest-asyncio 0.26 in auto mode: an async test needs no decorator, and each
+# test gets a fresh event loop so a leaked connection cannot travel between them.
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "db: needs PostgreSQL 16 with PostGIS 3.4 at the POSTGRES_* settings — skipped with a stated reason when unreachable",
+    "redis: needs Redis at the REDIS_* settings — skipped with a stated reason when unreachable",
+    "slow: excluded from a quick run with -m 'not slow'",
+]
+
+# -------------------------------------------------------------------- coverage
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+# Lines that exist to be unreachable, or that only run under a type checker,
+# would otherwise make the number look worse than the tests are.
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
